@@ -2,35 +2,31 @@
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq; 
 
 public class Program
 {
-    private static readonly string ApiKey = "f5c6066a8fa151f2a748f3defa92fd85"; 
+    private static readonly string ApiKey = "f5c6066a8fa151f2a748f3defa92fd85"; // I will reset or invoke this key, so you may use yours
     private static readonly string BaseUrl = "http://data.fixer.io/api/";
     private static readonly string BaseCurrency = "EUR"; 
-    private static readonly string AllowedTargetCurrenciesString = "USD,AUD,CAD,PLN,MXN"; 
-    private static readonly string[] AllowedTargetCurrencies = AllowedTargetCurrenciesString.Split(',');
-
+    private static readonly string[] AllowedTargetCurrencies = { "EUR", "USD", "AUD", "CAD", "PLN", "MXN" }; 
 
     public static async Task Main(string[] args)
     {
         Console.WriteLine("Currency Converter - Latest Rates (Base Currency: EUR)");
 
-        Console.Write("Enter source currency code (EUR, USD, AUD, CAD, PLN, MXN): ");
-        string? sourceCurrency = Console.ReadLine()?.ToUpper();
-        if (string.IsNullOrWhiteSpace(sourceCurrency) || !IsValidCurrencyCode(sourceCurrency))
-        {
-            Console.WriteLine("Invalid source currency code. Allowed : EUR, USD, AUD, CAD, PLN, MXN.");
-            return;
-        }
+        string? sourceCurrency = SelectCurrency("Select source currency:", AllowedTargetCurrencies);
+        if (string.IsNullOrEmpty(sourceCurrency)) return;
 
-        Console.Write("Enter target currency code (EUR, USD, AUD, CAD, PLN, MXN): ");
-        string? targetCurrency = Console.ReadLine()?.ToUpper();
-        if (string.IsNullOrWhiteSpace(targetCurrency) || !IsValidCurrencyCode(targetCurrency))
-        {
-            Console.WriteLine("Invalid target currency code. Allowed: EUR, USD, AUD, CAD, PLN, MXN.");
-            return;
-        }
+        Console.Clear(); 
+        Console.WriteLine($"Source currency: {sourceCurrency}"); 
+
+        string? targetCurrency = SelectCurrency("Select target currency:", AllowedTargetCurrencies);
+        if (string.IsNullOrEmpty(targetCurrency)) return;
+
+        Console.Clear(); 
+        Console.WriteLine($"Source currency: {sourceCurrency}"); 
+        Console.WriteLine($"Target currency: {targetCurrency}"); 
 
         Console.Write("Enter amount to convert: ");
         if (!decimal.TryParse(Console.ReadLine(), out decimal amount) || amount <= 0)
@@ -39,13 +35,19 @@ public class Program
             return;
         }
 
+        await PerformConversion(sourceCurrency, targetCurrency, amount);
+    }
+
+    private static async Task PerformConversion(string sourceCurrency, string targetCurrency, decimal amount)
+    {
         using HttpClient client = new HttpClient();
         try
         {
-            string latestRatesEndpoint = $"{BaseUrl}latest?access_key={ApiKey}&symbols={AllowedTargetCurrenciesString}&format=1";
+            string allowedTargetCurrenciesString = string.Join(",", AllowedTargetCurrencies.Where(c => c != "EUR")); 
+            string latestRatesEndpoint = $"{BaseUrl}latest?access_key={ApiKey}&symbols={allowedTargetCurrenciesString}&format=1";
 
             HttpResponseMessage response = await client.GetAsync(latestRatesEndpoint);
-            response.EnsureSuccessStatusCode(); 
+            response.EnsureSuccessStatusCode();
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
             JsonDocument document = JsonDocument.Parse(jsonResponse);
@@ -56,12 +58,11 @@ public class Program
 
                 if (sourceCurrency == BaseCurrency)
                 {
-                    sourceRateToEur = 1.0m; 
+                    sourceRateToEur = 1.0m;
                 }
                 else if (ratesElement.TryGetProperty(sourceCurrency, out JsonElement sourceRateElement) && sourceRateElement.TryGetDecimal(out sourceRateToEur))
                 {
-                    
-                    sourceRateToEur = 1.0m / sourceRateToEur;
+                    sourceRateToEur = 1.0m / sourceRateToEur; 
                 }
                 else
                 {
@@ -69,14 +70,12 @@ public class Program
                     return;
                 }
 
-
                 if (targetCurrency == BaseCurrency)
                 {
-                    targetRateToEur = 1.0m; 
+                    targetRateToEur = 1.0m;
                 }
                 else if (ratesElement.TryGetProperty(targetCurrency, out JsonElement targetRateElement) && targetRateElement.TryGetDecimal(out targetRateToEur))
                 {
-                    
                     targetRateToEur = targetRateElement.GetDecimal();
                 }
                 else
@@ -85,20 +84,17 @@ public class Program
                     return;
                 }
 
-                decimal convertedAmount = amount * targetRateToEur * sourceRateToEur; 
-
+                decimal convertedAmount = amount * targetRateToEur * sourceRateToEur;
                 Console.WriteLine($"\n{amount} {sourceCurrency} is equal to {convertedAmount:F2} {targetCurrency}");
-
-
             }
             else if (document.RootElement.TryGetProperty("error", out JsonElement errorElement))
             {
-                Console.WriteLine($"API Error: {errorElement.GetRawText()}"); 
+                Console.WriteLine($"API Error: {errorElement.GetRawText()}");
             }
             else
             {
                 Console.WriteLine("Could not find exchange rates in the API response.");
-                Console.WriteLine($"Raw response: {jsonResponse}"); 
+                Console.WriteLine($"Raw response: {jsonResponse}");
             }
         }
         catch (HttpRequestException ex)
@@ -115,13 +111,77 @@ public class Program
         }
     }
 
-    private static bool IsValidCurrencyCode(string code)
+    private static string? SelectCurrency(string prompt, string[] currencies)
     {
-        if (code == BaseCurrency) return true; 
-        foreach (var validCode in AllowedTargetCurrencies)
+        Console.WriteLine(); 
+        Console.WriteLine(); 
+
+        Console.CursorVisible = false;
+        int selectedIndex = 0;
+
+        Console.WriteLine(prompt);
+        for (int i = 0; i < currencies.Length; i++) 
         {
-            if (code == validCode) return true;
+            if (i == selectedIndex)
+            {
+                Console.BackgroundColor = ConsoleColor.Gray;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine($"»»» {currencies[i]}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.WriteLine($"    {currencies[i]}");
+            }
         }
-        return false;
+
+        while (true)
+        {
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+
+            switch (keyInfo.Key)
+            {
+                case ConsoleKey.UpArrow:
+                    selectedIndex = Math.Max(0, selectedIndex - 1);
+                    RedrawCurrencyList(currencies, selectedIndex); 
+                    break;
+                case ConsoleKey.DownArrow:
+                    selectedIndex = Math.Min(currencies.Length - 1, selectedIndex + 1);
+                    RedrawCurrencyList(currencies, selectedIndex); 
+                    break;
+                case ConsoleKey.Enter:
+                    Console.CursorVisible = true;
+                    Console.WriteLine(); 
+                    return currencies[selectedIndex];
+                case ConsoleKey.Escape:
+                    Console.CursorVisible = true;
+                    Console.WriteLine();
+                    return null;
+            }
+        }
+    }
+
+    private static void RedrawCurrencyList(string[] currencies, int selectedIndex)
+    {
+        int startLine = Console.CursorTop - currencies.Length; 
+        if (startLine < 0) startLine = 0; 
+
+        Console.CursorTop = startLine; 
+
+        for (int i = 0; i < currencies.Length; i++)
+        {
+            Console.CursorLeft = 0; 
+            if (i == selectedIndex)
+            {
+                Console.BackgroundColor = ConsoleColor.Gray;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine($"»»» {currencies[i]}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.WriteLine($"    {currencies[i]}");
+            }
+        }
     }
 }
