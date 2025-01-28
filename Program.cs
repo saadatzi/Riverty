@@ -13,20 +13,37 @@ public class Program
 
     public static async Task Main(string[] args)
     {
+        string consoleAggregateEachLevel = string.Empty;
         Console.WriteLine("Currency Converter - Latest Rates (Base Currency: EUR)");
 
-        string? sourceCurrency = SelectCurrency("Select source currency:", AllowedTargetCurrencies);
+        string? sourceCurrency = SelectItem("Select source currency:", AllowedTargetCurrencies);
         if (string.IsNullOrEmpty(sourceCurrency)) return;
+        consoleAggregateEachLevel += $"Source currency: {sourceCurrency} \n";
+        Console.Clear();
+        Console.WriteLine(consoleAggregateEachLevel); 
 
-        Console.Clear(); 
-        Console.WriteLine($"Source currency: {sourceCurrency}"); 
-
-        string? targetCurrency = SelectCurrency("Select target currency:", AllowedTargetCurrencies);
+        string? targetCurrency = SelectItem("Select target currency:", AllowedTargetCurrencies);
         if (string.IsNullOrEmpty(targetCurrency)) return;
 
+        consoleAggregateEachLevel += $"Target currency: {targetCurrency} \n";
         Console.Clear(); 
-        Console.WriteLine($"Source currency: {sourceCurrency}"); 
-        Console.WriteLine($"Target currency: {targetCurrency}"); 
+        Console.WriteLine(consoleAggregateEachLevel);
+
+        string? dateType = SelectItem("Select rate type:", new[] { "Latest", "Historical" });
+        if (string.IsNullOrEmpty(dateType)) return;
+        consoleAggregateEachLevel += $"Rate type: {dateType} \n";
+        Console.Clear(); 
+        Console.WriteLine(consoleAggregateEachLevel);
+
+        string? date = string.Empty;
+        if (dateType == "Historical")
+        {
+            date = GetHistoricalDateInput("Enter date (YYYY-MM-DD):");
+            if (string.IsNullOrEmpty(date)) return;
+            consoleAggregateEachLevel += $"Date: {date} \n";
+            Console.Clear(); 
+            Console.WriteLine(consoleAggregateEachLevel);
+        }
 
         Console.Write("Enter amount to convert: ");
         if (!decimal.TryParse(Console.ReadLine(), out decimal amount) || amount <= 0)
@@ -35,18 +52,31 @@ public class Program
             return;
         }
 
-        await PerformConversion(sourceCurrency, targetCurrency, amount);
+        await PerformConversion(sourceCurrency, targetCurrency, amount, dateType, date);
     }
 
-    private static async Task PerformConversion(string sourceCurrency, string targetCurrency, decimal amount)
+    private static async Task PerformConversion(
+        string sourceCurrency,
+        string targetCurrency,
+        decimal amount,
+        string dateType,
+        string? date)
     {
         using HttpClient client = new HttpClient();
         try
         {
-            string allowedTargetCurrenciesString = string.Join(",", AllowedTargetCurrencies.Where(c => c != "EUR")); 
-            string latestRatesEndpoint = $"{BaseUrl}latest?access_key={ApiKey}&symbols={allowedTargetCurrenciesString}&format=1";
+            string allowedTargetCurrenciesString = string.Join(",", AllowedTargetCurrencies.Where(c => c != "EUR"));
+            string apiUrl = $"{BaseUrl}";
+            if (dateType == "Historical" && !string.IsNullOrEmpty(date))
+            {
+                apiUrl += $"{date}?access_key={ApiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Historical Endpoint
+            }
+            else
+            {
+                apiUrl += $"latest?access_key={ApiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Latest Endpoint
+            }
 
-            HttpResponseMessage response = await client.GetAsync(latestRatesEndpoint);
+            HttpResponseMessage response = await client.GetAsync(apiUrl);
             response.EnsureSuccessStatusCode();
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
@@ -111,7 +141,7 @@ public class Program
         }
     }
 
-    private static string? SelectCurrency(string prompt, string[] currencies)
+    private static string? SelectItem(string prompt, string[] currencies)
     {
         Console.WriteLine(); 
         Console.WriteLine(); 
@@ -143,11 +173,11 @@ public class Program
             {
                 case ConsoleKey.UpArrow:
                     selectedIndex = Math.Max(0, selectedIndex - 1);
-                    RedrawCurrencyList(currencies, selectedIndex); 
+                    RedrawList(currencies, selectedIndex); 
                     break;
                 case ConsoleKey.DownArrow:
                     selectedIndex = Math.Min(currencies.Length - 1, selectedIndex + 1);
-                    RedrawCurrencyList(currencies, selectedIndex); 
+                    RedrawList(currencies, selectedIndex); 
                     break;
                 case ConsoleKey.Enter:
                     Console.CursorVisible = true;
@@ -161,26 +191,54 @@ public class Program
         }
     }
 
-    private static void RedrawCurrencyList(string[] currencies, int selectedIndex)
+    private static string? GetHistoricalDateInput(string prompt)
     {
-        int startLine = Console.CursorTop - currencies.Length; 
-        if (startLine < 0) startLine = 0; 
-
-        Console.CursorTop = startLine; 
-
-        for (int i = 0; i < currencies.Length; i++)
+        while (true)
         {
-            Console.CursorLeft = 0; 
+            Console.Clear();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.Write(prompt + " (YYYY-MM-DD, or leave empty to cancel): ");
+            string? dateInput = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(dateInput))
+            {
+                return null; // User cancelled
+            }
+
+            if (DateTime.TryParseExact(dateInput, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out _))
+            {
+                return dateInput; // Valid date format
+            }
+            else
+            {
+                Console.WriteLine("Invalid date format. Please use YYYY-MM-DD.");
+                Console.WriteLine("Press any key to try again.");
+                Console.ReadKey(true);
+            }
+        }
+    }
+
+    private static void RedrawList(string[] items, int selectedIndex)
+    {
+        int startLine = Console.CursorTop - items.Length;
+        if (startLine < 0) startLine = 0;
+
+        Console.CursorTop = startLine;
+
+        for (int i = 0; i < items.Length; i++)
+        {
+            Console.CursorLeft = 0;
             if (i == selectedIndex)
             {
                 Console.BackgroundColor = ConsoleColor.Gray;
                 Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine($"»»» {currencies[i]}");
+                Console.WriteLine($"»»» {items[i]}");
                 Console.ResetColor();
             }
             else
             {
-                Console.WriteLine($"    {currencies[i]}");
+                Console.WriteLine($"    {items[i]}");
             }
         }
     }
