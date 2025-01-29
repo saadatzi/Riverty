@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Riverty.Web.Models;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Riverty.Web.Controllers;
 
@@ -17,6 +15,48 @@ public class HomeController : Controller
         _logger = logger;
         _clientFactory = clientFactory;
     }
+    public IActionResult HistoricalRates()
+    {
+        var viewModel = new HistoricalRatesViewModel
+        {
+            HistoricalRates = new List<HistoricalRateData>()
+        };
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> HistoricalRates(HistoricalRatesViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        try
+        {
+            using var client = _clientFactory.CreateClient();
+            var startDateFormatted = model.StartDate?.ToString("yyyy-MM-dd");
+            var endDateFormatted = model.EndDate?.ToString("yyyy-MM-dd");
+
+            string apiUrl = $"http://localhost:5000/historical-rates/{model.CurrencyCode}?startDate={startDateFormatted}&endDate={endDateFormatted}";
+
+            var httpResponse = await client.GetAsync(apiUrl);
+            httpResponse.EnsureSuccessStatusCode();
+
+            var content = await httpResponse.Content.ReadAsStringAsync();
+            var historicalRates = JsonSerializer.Deserialize<List<HistoricalRateData>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            model.HistoricalRates = historicalRates;
+
+            return View(model);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Error calling API");
+            ModelState.AddModelError("", "Error retrieving data from the API.");
+            return View(model);
+        }
+    }
 
     public IActionResult Index()
     {
@@ -26,6 +66,7 @@ public class HomeController : Controller
         };
         return View(viewModel);
     }
+
 
     [HttpPost]
     public async Task<IActionResult> Index(RateViewModel viewModel)

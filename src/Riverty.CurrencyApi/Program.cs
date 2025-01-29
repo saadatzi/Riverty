@@ -7,6 +7,7 @@ using Riverty.ExchangeRateCalculator.Services;
 using ScheduledRateUpdater.Data;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Http;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,20 +62,34 @@ app.MapGet("/rates", async (string dateType, string? date, CurrencyService curre
 .WithOpenApi();
 
 // API Endpoint 2: Get Historical Rates for a Currency and Period
-app.MapGet("/historical-rates/{currencyCode}", async (string currencyCode, DateTime startDate, DateTime endDate, RateDbContext dbContext) =>
+app.MapGet("/historical-rates/{currencyCode}", async (string currencyCode, string startDate, string endDate, RateDbContext dbContext) =>
 {
     if (currencyCode.Length != 3)
     {
         return Results.BadRequest("Invalid currencyCode. Must be a 3-letter currency code.");
     }
 
-    if (startDate > endDate)
+    // Parse startDate and endDate as DateTime (UTC)
+    if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var startDateUtc))
+    {
+        return Results.BadRequest("Invalid startDate format. Please use yyyy-MM-dd.");
+    }
+    startDateUtc = startDateUtc.Date;
+
+    if (!DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var endDateUtc))
+    {
+        return Results.BadRequest("Invalid endDate format. Please use yyyy-MM-dd.");
+    }
+    endDateUtc = endDateUtc.Date;
+
+    if (startDateUtc > endDateUtc)
     {
         return Results.BadRequest("startDate must be before or equal to endDate.");
     }
 
+    // Query the database using startDateUtc and endDateUtc
     var historicalRates = await dbContext.ExchangeRates
-        .Where(r => r.RateDate >= startDate && r.RateDate <= endDate)
+        .Where(r => r.RateDate >= startDateUtc && r.RateDate <= endDateUtc)
         .Select(r => new
         {
             r.RateDate,
