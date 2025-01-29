@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../ExchangeRateCalculator/Riverty.ExchangeRateCalculator.csproj" />
     <ProjectReference Include="../Riverty.ExchangeRateCalculator/Riverty.ExchangeRateCalculator.csproj" />
   </ItemGroup>
 

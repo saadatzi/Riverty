@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyApi", "Riverty.CurrencyApi\Riverty.CurrencyApi.csproj", "{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyApi", "Riverty.CurrencyApi\Riverty.CurrencyApi.csproj", "{C0849AFA-32B2-4C31-A446-77754F1147DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyRateUpdater", "Riverty.CurrencyRateUpdater\Riverty.CurrencyRateUpdater.csproj", "{59F2608D-5A84-4A49-AAB4-3CD2396D491F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyRateUpdater", "Riverty.CurrencyRateUpdater\Riverty.CurrencyRateUpdater.csproj", "{19A1E6AF-6872-4470-8D6B-675558365ADE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.ExchangeRateCalculator", "Riverty.ExchangeRateCalculator\Riverty.ExchangeRateCalculator.csproj", "{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.ExchangeRateCalculator", "Riverty.ExchangeRateCalculator\Riverty.ExchangeRateCalculator.csproj", "{47F2FD1A-9205-4FCA-94B9-BCBC8484CDC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.Web", "Riverty.Web\Riverty.Web.csproj", "{2B3C76FC-B86C-46E1-920F-918F11B8CABA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.Web", "Riverty.Web\Riverty.Web.csproj", "{D6BCF893-013C-446A-80E0-B5A57FCA9880}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,21 +23,21 @@ Global
 		SolutionGuid = {344B14E6-0A54-4A33-BBDE-66BB9462AA3D}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0849AFA-32B2-4C31-A446-77754F1147DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0849AFA-32B2-4C31-A446-77754F1147DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0849AFA-32B2-4C31-A446-77754F1147DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0849AFA-32B2-4C31-A446-77754F1147DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19A1E6AF-6872-4470-8D6B-675558365ADE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19A1E6AF-6872-4470-8D6B-675558365ADE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19A1E6AF-6872-4470-8D6B-675558365ADE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19A1E6AF-6872-4470-8D6B-675558365ADE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47F2FD1A-9205-4FCA-94B9-BCBC8484CDC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47F2FD1A-9205-4FCA-94B9-BCBC8484CDC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47F2FD1A-9205-4FCA-94B9-BCBC8484CDC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47F2FD1A-9205-4FCA-94B9-BCBC8484CDC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6BCF893-013C-446A-80E0-B5A57FCA9880}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6BCF893-013C-446A-80E0-B5A57FCA9880}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6BCF893-013C-446A-80E0-B5A57FCA9880}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6BCF893-013C-446A-80E0-B5A57FCA9880}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

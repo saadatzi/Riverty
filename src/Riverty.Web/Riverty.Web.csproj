@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <ProjectReference Include="../Riverty.CurrencyApi/Riverty.CurrencyApi.csproj" />
+    <ProjectReference Include="../Riverty.ExchangeRateCalculator/Riverty.ExchangeRateCalculator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.1" />
   </ItemGroup>
 
 </Project>
