@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyRateUpdater
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.ExchangeRateCalculator", "Riverty.ExchangeRateCalculator\Riverty.ExchangeRateCalculator.csproj", "{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.Web", "Riverty.Web\Riverty.Web.csproj", "{2B3C76FC-B86C-46E1-920F-918F11B8CABA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,5 +35,9 @@ Global
 		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B3C76FC-B86C-46E1-920F-918F11B8CABA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
