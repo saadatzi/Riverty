@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Riverty.Web.Models;
 using System.Diagnostics;
 using System.Text.Json;
@@ -9,11 +10,16 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IHttpClientFactory _clientFactory;
+    private readonly ApiSettings _apiSettings;
 
-    public HomeController(ILogger<HomeController> logger, IHttpClientFactory clientFactory)
+    public HomeController(
+        ILogger<HomeController> logger,
+        IHttpClientFactory clientFactory,
+        IOptions<ApiSettings> apiSettings)
     {
         _logger = logger;
         _clientFactory = clientFactory;
+        _apiSettings = apiSettings.Value;
     }
     public IActionResult HistoricalRates()
     {
@@ -38,7 +44,7 @@ public class HomeController : Controller
             var startDateFormatted = model.StartDate?.ToString("yyyy-MM-dd");
             var endDateFormatted = model.EndDate?.ToString("yyyy-MM-dd");
 
-            string apiUrl = $"http://localhost:5000/historical-rates/{model.CurrencyCode}?startDate={startDateFormatted}&endDate={endDateFormatted}";
+            string apiUrl = $"{_apiSettings.BaseUrl}/historical-rates/{model.CurrencyCode}?startDate={startDateFormatted}&endDate={endDateFormatted}";
 
             var httpResponse = await client.GetAsync(apiUrl);
             httpResponse.EnsureSuccessStatusCode();
@@ -83,7 +89,7 @@ public class HomeController : Controller
 
         if (model.DateType == "Latest" || string.IsNullOrEmpty(model.Date?.ToString()))
         {
-            string apiUrl = $"http://localhost:5000/rates?dateType={model.DateType}&date=";
+            string apiUrl = $"{_apiSettings.BaseUrl}/rates?dateType={model.DateType}&date=";
 
             var httpResponse = await client.GetAsync(apiUrl);
             httpResponse.EnsureSuccessStatusCode();
@@ -144,7 +150,7 @@ public class HomeController : Controller
         }
         else if (model.DateType == "Historical" && model.Date != null)
         {
-            string apiUrl = $"http://localhost:5000/rates?dateType=Historical&date={model.Date?.ToString("yyyy-MM-dd")}";
+            string apiUrl = $"{_apiSettings.BaseUrl}/rates?dateType=Historical&date={model.Date?.ToString("yyyy-MM-dd")}";
 
             var httpResponse = await client.GetAsync(apiUrl);
             httpResponse.EnsureSuccessStatusCode();
