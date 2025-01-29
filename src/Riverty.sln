@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyRateUpdater", "CurrencyRateUpdater\Riverty.CurrencyRateUpdater.csproj", "{2F96AF71-28EC-45CB-BA68-0E8C04B66312}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyApi", "Riverty.CurrencyApi\Riverty.CurrencyApi.csproj", "{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.ExchangeRateCalculator", "ExchangeRateCalculator\Riverty.ExchangeRateCalculator.csproj", "{2D3A41BA-6740-47A1-AA82-512AE2776481}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.CurrencyRateUpdater", "Riverty.CurrencyRateUpdater\Riverty.CurrencyRateUpdater.csproj", "{59F2608D-5A84-4A49-AAB4-3CD2396D491F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Riverty.ExchangeRateCalculator", "Riverty.ExchangeRateCalculator\Riverty.ExchangeRateCalculator.csproj", "{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,13 +21,17 @@ Global
 		SolutionGuid = {344B14E6-0A54-4A33-BBDE-66BB9462AA3D}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2F96AF71-28EC-45CB-BA68-0E8C04B66312}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F96AF71-28EC-45CB-BA68-0E8C04B66312}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F96AF71-28EC-45CB-BA68-0E8C04B66312}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F96AF71-28EC-45CB-BA68-0E8C04B66312}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2D3A41BA-6740-47A1-AA82-512AE2776481}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2D3A41BA-6740-47A1-AA82-512AE2776481}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2D3A41BA-6740-47A1-AA82-512AE2776481}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2D3A41BA-6740-47A1-AA82-512AE2776481}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE6280F7-9C03-4BF3-8F92-A6E5AD25B10E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59F2608D-5A84-4A49-AAB4-3CD2396D491F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72C9E85C-FF6C-4B07-92AA-EDCB447FE957}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
