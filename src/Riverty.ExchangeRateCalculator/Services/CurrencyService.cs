@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Riverty.ExchangeRateCalculator.UI;
 
@@ -62,7 +63,7 @@ public class CurrencyService
 
         await PerformConversion(sourceCurrency, targetCurrency, amount, dateType, date);
     }
-    public async Task PerformConversion(string sourceCurrency, string targetCurrency, decimal amount, string dateType, string? date)
+    public async Task<decimal?> PerformConversion(string sourceCurrency, string targetCurrency, decimal amount, string dateType, string? date)
     {
         try
         {
@@ -83,7 +84,6 @@ public class CurrencyService
                 else
                 {
                     Console.WriteLine($"Could not find exchange rate for source currency {sourceCurrency} against EUR.");
-                    return;
                 }
 
                 if (targetCurrency == BaseCurrency)
@@ -96,11 +96,11 @@ public class CurrencyService
                 else
                 {
                     Console.WriteLine($"Could not find exchange rate for target currency {targetCurrency} against EUR.");
-                    return;
                 }
 
                 decimal convertedAmount = amount * targetRateToEur * sourceRateToEur;
                 Console.WriteLine($"\n{amount} {sourceCurrency} is equal to {convertedAmount:F2} {targetCurrency} ({dateType} rate{(dateType == "Historical" ? $" on {date}" : "")})");
+                return convertedAmount;
             }
             else
             {
@@ -111,6 +111,7 @@ public class CurrencyService
         {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
+        return null;
     }
 
     public async Task<ExchangeRateResponse> GetExchangeRatesAsync(string dateType, string? date = default)
@@ -133,41 +134,74 @@ public class CurrencyService
         string jsonResponse = await response.Content.ReadAsStringAsync();
         JsonDocument document = JsonDocument.Parse(jsonResponse);
 
-        if (document.RootElement.TryGetProperty("rates", out JsonElement ratesElement))
+        var options = new JsonSerializerOptions
         {
-            var ratesDictionary = new Dictionary<string, decimal>();
-            foreach (var currency in AllowedTargetCurrencies)
-            {
-                if (currency != "EUR" && ratesElement.TryGetProperty(currency, out var rateElement) && rateElement.TryGetDecimal(out var rateValue))
-                {
-                    ratesDictionary.Add(currency, rateValue);
-                }
-            }
+            PropertyNameCaseInsensitive = true
+        };
+        var result = JsonSerializer.Deserialize<FixerApiResponseModel>(jsonResponse, options);
 
+        if (result is { Success: true })
+        {
             return new ExchangeRateResponse
             {
-                BaseCurrency = BaseCurrency,
-                Rates = ratesDictionary,
-                RateDate = DateTime.UtcNow.Date // Or we can parse from the response
+                BaseCurrency = result.Base,
+                Rates = result.Rates,
+                RateDate = DateTime.UtcNow.Date
             };
-        }
-        else if (document.RootElement.TryGetProperty("error", out JsonElement errorElement))
-        {
-            Console.WriteLine($"API Error: {errorElement.GetRawText()}");
         }
         else
         {
-            Console.WriteLine("Could not find exchange rates in the API response.");
-            Console.WriteLine($"Raw response: {jsonResponse}");
-        }
+            // Handle error
+            if (result?.Error != null)
+            {
+                Console.WriteLine($"API Error: {result.Error.Type} - {result.Error.Info}");
+            }
+            else
+            {
+                Console.WriteLine("API request failed with an unknown error.");
+            }
 
-        return null;
+            return null;
+        }
     }
     
     public class ExchangeRateResponse
     {
         public string BaseCurrency { get; set; } = string.Empty;
-        public Dictionary<string, decimal> Rates { get; set; } = new();
+        public Dictionary<string, decimal> Rates { get; set; } = new Dictionary<string, decimal>();
         public DateTime RateDate { get; set; }
+    }
+
+    public class FixerApiResponseModel
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+
+        [JsonPropertyName("timestamp")]
+        public long Timestamp { get; set; }
+
+        [JsonPropertyName("base")]
+        public string Base { get; set; } = string.Empty;
+
+        [JsonPropertyName("date")]
+        public string Date { get; set; } = string.Empty;
+
+        [JsonPropertyName("rates")]
+        public Dictionary<string, decimal> Rates { get; set; } = new Dictionary<string, decimal>();
+
+        [JsonPropertyName("error")]
+        public FixerApiError? Error { get; set; }
+    }
+
+    public class FixerApiError
+    {
+        [JsonPropertyName("code")]
+        public int Code { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = string.Empty;
+
+        [JsonPropertyName("info")]
+        public string Info { get; set; } = string.Empty;
     }
 }

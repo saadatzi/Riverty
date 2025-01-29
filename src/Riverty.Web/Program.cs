@@ -1,8 +1,10 @@
+using Riverty.ExchangeRateCalculator.Services;
 using Riverty.Web.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<CurrencyService>();
 
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));

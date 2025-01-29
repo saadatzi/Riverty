@@ -6,6 +6,6 @@ namespace Riverty.Web.Models
         public string? TargetCurrency { get; set; }
         public string? DateType { get; set; }
         public string? Date { get; set; }
-        public decimal ConvertedAmount { get; set; }
+        public decimal? ConvertedAmount { get; set; }
     }
 }

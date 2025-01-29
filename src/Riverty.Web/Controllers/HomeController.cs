@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Riverty.ExchangeRateCalculator.Services;
 using Riverty.Web.Models;
 using System.Diagnostics;
 using System.Text.Json;
@@ -11,15 +12,18 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly IHttpClientFactory _clientFactory;
     private readonly ApiSettings _apiSettings;
+    private readonly CurrencyService _currencyService;
 
     public HomeController(
         ILogger<HomeController> logger,
         IHttpClientFactory clientFactory,
-        IOptions<ApiSettings> apiSettings)
+        IOptions<ApiSettings> apiSettings,
+        CurrencyService currencyService)
     {
         _logger = logger;
         _clientFactory = clientFactory;
         _apiSettings = apiSettings.Value;
+        _currencyService = currencyService;
     }
     public IActionResult HistoricalRates()
     {
@@ -81,142 +85,44 @@ public class HomeController : Controller
         {
             return View(viewModel);
         }
-
-        using var client = _clientFactory.CreateClient();
-
-        RateResponseModel? rateResponse = null;
+        
         RateRequestModel model = viewModel.Request;
 
-        if (model.DateType == "Latest" || string.IsNullOrEmpty(model.Date?.ToString()))
-        {
-            string apiUrl = $"{_apiSettings.BaseUrl}/rates?dateType={model.DateType}&date=";
-
-            var httpResponse = await client.GetAsync(apiUrl);
-            httpResponse.EnsureSuccessStatusCode();
-
-            var content = await httpResponse.Content.ReadAsStringAsync();
-
-            // Parse the JSON using System.Text.Json
-            var jsonDocument = JsonDocument.Parse(content);
-
-            if (jsonDocument.RootElement.TryGetProperty("rates", out JsonElement ratesElement))
+        try
             {
-                decimal sourceRateToEur, targetRateToEur;
+                decimal? convertedAmount;
+                string? date = null;
 
-                string sourceCurrency = model.SourceCurrency ?? "EUR";
-                string targetCurrency = model.TargetCurrency ?? "USD";
-                if (sourceCurrency == "EUR")
+                // Use CurrencyService.PerformConversion for both Latest and Historical
+                if (model.DateType == "Historical")
                 {
-                    sourceRateToEur = 1.0m;
-                }
-                else if (ratesElement.TryGetProperty(sourceCurrency, out JsonElement sourceRateElement) && sourceRateElement.TryGetDecimal(out sourceRateToEur))
-                {
-                    sourceRateToEur = 1.0m / sourceRateToEur;
-                }
-                else
-                {
-                    ModelState.AddModelError("Request.SourceCurrency", "Could not find exchange rate for source currency");
-                    return View(viewModel);
+                    date = model.Date?.ToString("yyyy-MM-dd");
                 }
 
-                if (targetCurrency == "EUR")
-                {
-                    targetRateToEur = 1.0m;
-                }
-                else if (ratesElement.TryGetProperty(targetCurrency, out JsonElement targetRateElement) && targetRateElement.TryGetDecimal(out targetRateToEur))
-                {
-                    targetRateToEur = targetRateElement.GetDecimal();
-                }
-                else
-                {
-                    ModelState.AddModelError("Request.TargetCurrency", "Could not find exchange rate for target currency");
-                    return View(viewModel);
-                }
+                convertedAmount = await _currencyService.PerformConversion(
+                    model.SourceCurrency,
+                    model.TargetCurrency,
+                    model.Amount,
+                    model.DateType!,
+                    date
+                );
 
-                decimal convertedAmount = model.Amount * targetRateToEur * sourceRateToEur;
-                rateResponse = new RateResponseModel
+                viewModel.Response = new RateResponseModel
                 {
                     SourceCurrency = model.SourceCurrency,
                     TargetCurrency = model.TargetCurrency,
                     DateType = model.DateType,
+                    Date = date,
                     ConvertedAmount = convertedAmount
                 };
             }
-            else
+            catch (Exception ex)
             {
-                ModelState.AddModelError("Api Error", "Problem in response");
-                return View(viewModel);
+                _logger.LogError(ex, "Error during currency conversion");
+                ModelState.AddModelError("Api Error", "An error occurred while performing the currency conversion.");
             }
-        }
-        else if (model.DateType == "Historical" && model.Date != null)
-        {
-            string apiUrl = $"{_apiSettings.BaseUrl}/rates?dateType=Historical&date={model.Date?.ToString("yyyy-MM-dd")}";
 
-            var httpResponse = await client.GetAsync(apiUrl);
-            httpResponse.EnsureSuccessStatusCode();
-            var content = await httpResponse.Content.ReadAsStringAsync();
-            var jsonDocument = JsonDocument.Parse(content);
-
-            if (jsonDocument.RootElement.TryGetProperty("rates", out JsonElement ratesElement))
-            {
-                decimal sourceRateToEur, targetRateToEur;
-
-                string sourceCurrency = model.SourceCurrency ?? "EUR";
-                string targetCurrency = model.TargetCurrency ?? "USD";
-                if (sourceCurrency == "EUR")
-                {
-                    sourceRateToEur = 1.0m;
-                }
-                else if (ratesElement.TryGetProperty(sourceCurrency, out JsonElement sourceRateElement) && sourceRateElement.TryGetDecimal(out sourceRateToEur))
-                {
-                    sourceRateToEur = 1.0m / sourceRateToEur;
-                }
-                else
-                {
-                    ModelState.AddModelError("Request.SourceCurrency", "Could not find exchange rate for source currency");
-                    return View(viewModel);
-                }
-
-                if (targetCurrency == "EUR")
-                {
-                    targetRateToEur = 1.0m;
-                }
-                else if (ratesElement.TryGetProperty(targetCurrency, out JsonElement targetRateElement) && targetRateElement.TryGetDecimal(out targetRateToEur))
-                {
-                    targetRateToEur = targetRateElement.GetDecimal();
-                }
-                else
-                {
-                    ModelState.AddModelError("Request.TargetCurrency", "Could not find exchange rate for target currency");
-                    return View(viewModel);
-                }
-
-                decimal convertedAmount = model.Amount * targetRateToEur * sourceRateToEur;
-                rateResponse = new RateResponseModel
-                {
-                    SourceCurrency = model.SourceCurrency,
-                    TargetCurrency = model.TargetCurrency,
-                    DateType = model.DateType,
-                    Date = model.Date?.ToString("yyyy-MM-dd"),
-                    ConvertedAmount = convertedAmount
-                };
-            }
-            else
-            {
-                ModelState.AddModelError("Api Error", "Problem in response");
-                return View(viewModel);
-            }
-        }
-
-        if (rateResponse == null)
-        {
-            ModelState.AddModelError("Api Error", "Response could not be created");
             return View(viewModel);
-        }
-
-        viewModel.Response = rateResponse;
-
-        return View(viewModel);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
