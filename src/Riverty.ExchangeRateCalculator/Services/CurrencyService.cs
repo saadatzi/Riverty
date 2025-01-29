@@ -62,34 +62,13 @@ public class CurrencyService
 
         await PerformConversion(sourceCurrency, targetCurrency, amount, dateType, date);
     }
-    public async Task PerformConversion(
-        string sourceCurrency,
-        string targetCurrency,
-        decimal amount,
-        string dateType,
-        string? date = default)
+    public async Task PerformConversion(string sourceCurrency, string targetCurrency, decimal amount, string dateType, string? date)
     {
-        using HttpClient client = new HttpClient();
         try
         {
-            string allowedTargetCurrenciesString = string.Join(",", AllowedTargetCurrencies.Where(c => c != "EUR"));
-            string apiUrl = $"{_baseUrl}";
-            if (dateType == "Historical" && !string.IsNullOrEmpty(date))
-            {
-                apiUrl += $"{date}?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Historical Endpoint
-            }
-            else
-            {
-                apiUrl += $"latest?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Latest Endpoint
-            }
+            var rates = await GetExchangeRatesAsync(dateType, date);
 
-            HttpResponseMessage response = await client.GetAsync(apiUrl);
-            response.EnsureSuccessStatusCode();
-
-            string jsonResponse = await response.Content.ReadAsStringAsync();
-            JsonDocument document = JsonDocument.Parse(jsonResponse);
-
-            if (document.RootElement.TryGetProperty("rates", out JsonElement ratesElement))
+            if (rates != null)
             {
                 decimal sourceRateToEur, targetRateToEur;
 
@@ -97,9 +76,9 @@ public class CurrencyService
                 {
                     sourceRateToEur = 1.0m;
                 }
-                else if (ratesElement.TryGetProperty(sourceCurrency, out JsonElement sourceRateElement) && sourceRateElement.TryGetDecimal(out sourceRateToEur))
+                else if (rates.Rates.TryGetValue(sourceCurrency, out sourceRateToEur))
                 {
-                    sourceRateToEur = 1.0m / sourceRateToEur; 
+                    sourceRateToEur = 1.0m / sourceRateToEur;
                 }
                 else
                 {
@@ -111,9 +90,8 @@ public class CurrencyService
                 {
                     targetRateToEur = 1.0m;
                 }
-                else if (ratesElement.TryGetProperty(targetCurrency, out JsonElement targetRateElement) && targetRateElement.TryGetDecimal(out targetRateToEur))
+                else if (rates.Rates.TryGetValue(targetCurrency, out targetRateToEur))
                 {
-                    targetRateToEur = targetRateElement.GetDecimal();
                 }
                 else
                 {
@@ -122,29 +100,74 @@ public class CurrencyService
                 }
 
                 decimal convertedAmount = amount * targetRateToEur * sourceRateToEur;
-                Console.WriteLine($"\n{amount} {sourceCurrency} is equal to {convertedAmount:F2} {targetCurrency}");
-            }
-            else if (document.RootElement.TryGetProperty("error", out JsonElement errorElement))
-            {
-                Console.WriteLine($"API Error: {errorElement.GetRawText()}");
+                Console.WriteLine($"\n{amount} {sourceCurrency} is equal to {convertedAmount:F2} {targetCurrency} ({dateType} rate{(dateType == "Historical" ? $" on {date}" : "")})");
             }
             else
             {
-                Console.WriteLine("Could not find exchange rates in the API response.");
-                Console.WriteLine($"Raw response: {jsonResponse}");
+                Console.WriteLine("Could not retrieve exchange rates.");
             }
-        }
-        catch (HttpRequestException ex)
-        {
-            Console.WriteLine($"HTTP Request Error: {ex.Message}");
-        }
-        catch (JsonException ex)
-        {
-            Console.WriteLine($"JSON Parsing Error: {ex.Message}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
+    }
+
+    public async Task<ExchangeRateResponse> GetExchangeRatesAsync(string dateType, string? date = default)
+    {
+        using HttpClient client = new HttpClient();
+        string allowedTargetCurrenciesString = string.Join(",", AllowedTargetCurrencies.Where(c => c != "EUR"));
+        string apiUrl = $"{_baseUrl}";
+        if (dateType == "Historical" && !string.IsNullOrEmpty(date))
+        {
+            apiUrl += $"{date}?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Historical Endpoint
+        }
+        else
+        {
+            apiUrl += $"latest?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Latest Endpoint
+        }
+
+        HttpResponseMessage response = await client.GetAsync(apiUrl);
+        response.EnsureSuccessStatusCode();
+
+        string jsonResponse = await response.Content.ReadAsStringAsync();
+        JsonDocument document = JsonDocument.Parse(jsonResponse);
+
+        if (document.RootElement.TryGetProperty("rates", out JsonElement ratesElement))
+        {
+            var ratesDictionary = new Dictionary<string, decimal>();
+            foreach (var currency in AllowedTargetCurrencies)
+            {
+                if (currency != "EUR" && ratesElement.TryGetProperty(currency, out var rateElement) && rateElement.TryGetDecimal(out var rateValue))
+                {
+                    ratesDictionary.Add(currency, rateValue);
+                }
+            }
+
+            return new ExchangeRateResponse
+            {
+                BaseCurrency = BaseCurrency,
+                Rates = ratesDictionary,
+                RateDate = DateTime.UtcNow.Date // Or we can parse from the response
+            };
+        }
+        else if (document.RootElement.TryGetProperty("error", out JsonElement errorElement))
+        {
+            Console.WriteLine($"API Error: {errorElement.GetRawText()}");
+        }
+        else
+        {
+            Console.WriteLine("Could not find exchange rates in the API response.");
+            Console.WriteLine($"Raw response: {jsonResponse}");
+        }
+
+        return null;
+    }
+    
+    public class ExchangeRateResponse
+    {
+        public string BaseCurrency { get; set; } = string.Empty;
+        public Dictionary<string, decimal> Rates { get; set; } = new();
+        public DateTime RateDate { get; set; }
     }
 }
