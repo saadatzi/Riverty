@@ -4,6 +4,7 @@ using Riverty.ExchangeRateCalculator.Services;
 using Riverty.Web.Models;
 using System.Diagnostics;
 using System.Text.Json;
+using static Riverty.ExchangeRateCalculator.Services.CurrencyService;
 
 namespace Riverty.Web.Controllers;
 
@@ -99,12 +100,23 @@ public class HomeController : Controller
                     date = model.Date?.ToString("yyyy-MM-dd");
                 }
 
-                convertedAmount = await _currencyService.PerformConversion(
+                using var client = _clientFactory.CreateClient();
+
+                string apiUrl = $"{_apiSettings.BaseUrl}/rates?dateType={model.DateType}&date={date}";
+
+                var httpResponse = await client.GetAsync(apiUrl);
+                httpResponse.EnsureSuccessStatusCode();
+
+                var content = await httpResponse.Content.ReadAsStringAsync();
+                var rates = JsonSerializer.Deserialize<ExchangeRateResponse>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                convertedAmount = await PerformConversion(
                     model.SourceCurrency,
                     model.TargetCurrency,
                     model.Amount,
                     model.DateType!,
-                    date
+                    date,
+                    rates
                 );
 
                 viewModel.Response = new RateResponseModel

@@ -61,13 +61,13 @@ public class CurrencyService
             return;
         }
 
-        await PerformConversion(sourceCurrency, targetCurrency, amount, dateType, date);
+        var rates = await GetExchangeRatesAsync(dateType, date);
+        await PerformConversion(sourceCurrency, targetCurrency, amount, dateType, date, rates);
     }
-    public async Task<decimal?> PerformConversion(string sourceCurrency, string targetCurrency, decimal amount, string dateType, string? date)
+    public static Task<decimal?> PerformConversion(string sourceCurrency, string targetCurrency, decimal amount, string dateType, string? date, ExchangeRateResponse rates)
     {
         try
         {
-            var rates = await GetExchangeRatesAsync(dateType, date);
 
             if (rates != null)
             {
@@ -100,7 +100,7 @@ public class CurrencyService
 
                 decimal convertedAmount = amount * targetRateToEur * sourceRateToEur;
                 Console.WriteLine($"\n{amount} {sourceCurrency} is equal to {convertedAmount:F2} {targetCurrency} ({dateType} rate{(dateType == "Historical" ? $" on {date}" : "")})");
-                return convertedAmount;
+                return Task.FromResult<decimal?>(convertedAmount);
             }
             else
             {
@@ -111,7 +111,8 @@ public class CurrencyService
         {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
-        return null;
+        return Task.FromResult<decimal?>(null);
+
     }
 
     public async Task<ExchangeRateResponse> GetExchangeRatesAsync(string dateType, string? date = default)
@@ -121,11 +122,11 @@ public class CurrencyService
         string apiUrl = $"{_baseUrl}";
         if (dateType == "Historical" && !string.IsNullOrEmpty(date))
         {
-            apiUrl += $"{date}?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Historical Endpoint
+            apiUrl += $"{date}?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1";
         }
         else
         {
-            apiUrl += $"latest?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1"; // Latest Endpoint
+            apiUrl += $"latest?access_key={_apiKey}&symbols={allowedTargetCurrenciesString}&format=1";
         }
 
         HttpResponseMessage response = await client.GetAsync(apiUrl);
